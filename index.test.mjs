@@ -326,6 +326,31 @@ test('article() emits the full openGraph block with the article fields', () => {
   assert.deepEqual(article.openGraph.tags, ['guidance'])
 })
 
+test('page() and article() keep the site image, not the brand default', () => {
+  // A site that configured its own social artwork must not silently revert to
+  // the fleet image the moment a page or article restates the OpenGraph block.
+  const custom = { url: '/social-preview.png', width: 1200, height: 630, alt: 'Custom' }
+  const branded = defineSite({ ...options, image: custom })
+
+  assert.equal(
+    branded.article({ title: 'Guidance' }).openGraph.images[0].url,
+    '/social-preview.png',
+  )
+  assert.equal(
+    branded.page({ title: 'Guidance', image: '/page.png' }).openGraph.images[0].url,
+    '/page.png',
+  )
+  // And a site with no image of its own still gets the brand default.
+  assert.equal(site.article({ title: 'Guidance' }).openGraph.images[0].url, BRAND.ogImage.url)
+})
+
+test('image: false survives into page() and article()', () => {
+  // The opt-out that re-enables app/opengraph-image.* must not be undone by a
+  // page restating the block.
+  const noImage = defineSite({ ...options, image: false })
+  assert.ok(!('images' in noImage.article({ title: 'Guidance' }).openGraph))
+})
+
 test('article() works without a published date', () => {
   // Evergreen documentation legitimately uses og:type article with no date —
   // article:published_time is optional in the OpenGraph spec, and a docs page

@@ -322,7 +322,10 @@ function buildPageMetadata(site, options) {
         : buildOpenGraph({
             siteName: site.siteName,
             locale: site.locale,
-            image: options.image,
+            // Falls back to the SITE's image, not the brand default — a site
+            // that configured its own social artwork must not lose it the
+            // moment a page restates the block.
+            image: options.image ?? site.image,
             overrides: undefined,
           }),
   })
@@ -338,7 +341,7 @@ function buildArticleMetadata(site, options) {
       ...buildOpenGraph({
         siteName: site.siteName,
         locale: site.locale,
-        image: options.image,
+        image: options.image ?? site.image,
         overrides: undefined,
       }),
       type: 'article',
