@@ -1,0 +1,91 @@
+{
+  "name": "@nswds/metadata",
+  "version": "0.0.0",
+  "description": "Shared Next.js App Router metadata, viewport and web app manifest for the NSW Design System fleet.",
+  "license": "MPL-2.0",
+  "keywords": [
+    "nextjs",
+    "app-router",
+    "metadata",
+    "open-graph",
+    "web-app-manifest",
+    "favicon",
+    "nswds",
+    "nsw-government"
+  ],
+  "homepage": "https://github.com/digitalnsw/nswds-metadata#readme",
+  "bugs": {
+    "url": "https://github.com/digitalnsw/nswds-metadata/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/digitalnsw/nswds-metadata.git"
+  },
+  "author": "NSW Design System",
+  "type": "module",
+  "main": "index.mjs",
+  "types": "./index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./index.d.mts",
+      "default": "./index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.mjs",
+    "index.d.mts"
+  ],
+  "engines": {
+    "node": "^22.22.2 || >=24.15.0"
+  },
+  "scripts": {
+    "semantic-release": "semantic-release",
+    "test": "node --test index.test.mjs manifest.test.mjs",
+    "test:build": "node scripts/test-next-build.mjs",
+    "typecheck": "tsc --noEmit",
+    "check:package": "publint --strict && attw --pack . --profile esm-only",
+    "lint": "prettier --check .",
+    "prepare": "husky",
+    "branch:create": "scripts/create-branch.sh",
+    "branch:suggest": "scripts/suggest-branch-name.sh",
+    "branch:suggest:create": "scripts/suggest-branch-name.sh --create",
+    "commit": "scripts/git-commit.sh",
+    "pr": "scripts/pull-request.sh",
+    "snyk:check": "bash -lc 'npm exec --yes --package snyk@latest -- snyk test --all-projects --json-file-output=snyk-analysis.json; code=$?; if [ $code -eq 0 ] || [ $code -eq 1 ]; then exit 0; fi; exit $code'",
+    "snyk:monitor": "npm exec --yes --package snyk@latest -- snyk monitor --all-projects",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "peerDependencies": {
+    "next": ">=15"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.3",
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@nswds/prettier-config": "^1.0.1",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^11.0.0",
+    "@semantic-release/github": "^12.0.3",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.0",
+    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "husky": "^9.1.7",
+    "next": "^16.3.0",
+    "prettier": "^3.5.3",
+    "publint": "^0.3.21",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "semantic-release": "^25.0.3",
+    "typescript": "^5.9.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "prettier": "@nswds/prettier-config"
+}

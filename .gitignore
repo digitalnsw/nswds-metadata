@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.DS_Store
+
+# repo-specific
+.next/
+next-env.d.ts
+snyk-analysis.json
+tsconfig.tsbuildinfo

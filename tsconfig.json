@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    // NodeNext, not the consumers' "bundler": it is the stricter of the two,
+    // so declarations that resolve here resolve everywhere the fleet uses them.
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": []
+  },
+  // The fixture is a Next app with its own tsconfig and JSX settings; `next
+  // build` typechecks it during `npm run test:build`.
+  "include": ["index.d.mts", "types.test.ts"]
+}

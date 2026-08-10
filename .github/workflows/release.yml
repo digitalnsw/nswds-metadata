@@ -1,0 +1,70 @@
+name: Release
+on:
+  push:
+    branches: [main]
+
+# One release at a time: two quick merges to main must not run semantic-release
+# concurrently (version-bump/publish race). Queued, never cancelled.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  # Required for npm OIDC trusted publishing — npm exchanges this short-lived
+  # token for publish rights, so there is no NPM_TOKEN secret in this repo.
+  id-token: write
+  contents: read
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # main is ruleset-protected: semantic-release pushes the changelog and
+          # version bump, so it needs a deploy key that can bypass the ruleset.
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Verify provenance attestations and registry signatures
+        run: npm audit signatures
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # LOAD-BEARING: @semantic-release/git commits the changelog and version
+          # bump during the release, and husky's commit-msg hook would lint that
+          # bot commit — long release-note footers fail footer-max-line-length.
+          # commitlint.config.mjs also ignores `chore(release):`, so this is the
+          # second of two layers: losing either one alone cannot break a release.
+          # Dropping it is how nswds-tokens releases broke twice (tokens #72/#94).
+          # Scoped to THIS STEP deliberately — job-wide, husky's "HUSKY=0 skip
+          # install" line pollutes stdout of any step that parses command output.
+          HUSKY: 0
+        run: npx semantic-release
+
+      # Catches the partial release: tag pushed and CHANGELOG committed, but the npm
+      # publish never landed. Runs even when this push released nothing, so a gap left
+      # by an earlier run turns THIS run red rather than hiding behind "no relevant
+      # changes". (It is skipped if semantic-release itself fails — that already fails
+      # the job, so there is nothing left to surface.)
+      - name: Verify npm matches the latest release tag
+        run: node scripts/verify-release-published.mjs

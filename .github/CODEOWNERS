@@ -1,0 +1,3 @@
+# Advisory ownership routing (no required-review rule while the team is a
+# single active maintainer — see nswds-devops MAINTENANCE.md).
+* @laurenhitchon

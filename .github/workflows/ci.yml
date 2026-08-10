@@ -1,0 +1,88 @@
+name: CI
+
+# No merge_group trigger. The shared merge gate (shared-ci.yml) is
+# pull_request-only, so a merge queue would run this job but none of the
+# required "install / *" or commitlint contexts — leaving them permanently
+# unsatisfiable and the queue stuck. Add it here only alongside the shared stub.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Package smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Runs before install: npm reports a lockfile containing conflict markers
+      # as a parse error that reads like a corrupt lockfile, so catch the markers
+      # in any tracked file first and say plainly what's wrong. The pull_request
+      # event checks out the PR merged into its base, so this covers markers
+      # introduced by the merge itself — including via GitHub's web "Resolve
+      # conflicts" editor, which no local hook can see.
+      #
+      # All four marker types: `=======` closes every conflict block, and
+      # `|||||||` appears for anyone running merge.conflictStyle=diff3/zdiff3.
+      # The `( .*)?$` tail is load-bearing, not tidiness — `=======` ends the
+      # line with no label, so the pattern has to accept end-of-line, and
+      # anchoring it is what stops a bare `^={7}` prefix from matching the
+      # 34-character `=` rule under the title in LICENSE and failing this job
+      # on every run, forever. Do not relax it to a prefix match.
+      # .husky/pre-commit runs the same pattern against the index.
+      #
+      # The exit status is captured rather than tested with `if git grep`,
+      # because git grep has three outcomes, not two: 0 found, 1 none, >1 the
+      # scan itself failed (128 for a bad pattern or a broken repo). Under a
+      # plain `if`, that third case is indistinguishable from "clean" and the
+      # gate would pass without having looked at anything. `|| status=$?` also
+      # keeps the expected exit 1 from tripping the shell's `-e`.
+      - name: Check for unresolved merge conflict markers
+        run: |
+          status=0
+          git grep -InE '^(<{7}|={7}|>{7}|\|{7})( .*)?$' || status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "::error::Unresolved merge conflict markers found in the files above."
+            exit 1
+          elif [ "$status" -ne 1 ]; then
+            echo "::error::git grep exited $status, so the scan never ran. Failing instead of reporting a clean tree."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      # Everything below stays in this one job on purpose. The branch ruleset's
+      # required contexts are configured by hand outside the repo, so a second
+      # job means editing the ruleset to match — and a required context that no
+      # longer exists blocks every PR.
+
+      - name: Assert the metadata, viewport and manifest factories behave
+        run: npm test
+
+      # index.d.mts is hand-written and nothing generates it, so this is what
+      # stops it drifting from index.mjs. The @ts-expect-error lines in
+      # types.test.ts fail here if the errors they expect stop occurring.
+      - name: Assert the shipped declarations match the implementation
+        run: npm run typecheck
+
+      # Catches export-map and type-resolution faults that a passing tsc cannot
+      # see, because tsc resolves from source rather than through `exports`.
+      - name: Assert the package resolves the way a consumer loads it
+        run: npm run check:package
+
+      # The only check that reaches Next's metadata route loader, which rejects
+      # a non-function default export. `npm test` can prove createManifest
+      # returns a function; only a real build proves Next accepts it.
+      - name: Assert a real Next build accepts the manifest route
+        run: npm run test:build
