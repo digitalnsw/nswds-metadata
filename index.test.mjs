@@ -326,6 +326,17 @@ test('article() emits the full openGraph block with the article fields', () => {
   assert.deepEqual(article.openGraph.tags, ['guidance'])
 })
 
+test('article() works without a published date', () => {
+  // Evergreen documentation legitimately uses og:type article with no date —
+  // article:published_time is optional in the OpenGraph spec, and a docs page
+  // reporting a date it does not have is worse than one reporting none.
+  const article = site.article({ title: 'Getting started' })
+  assert.equal(article.openGraph.type, 'article')
+  assert.equal(article.openGraph.siteName, options.title)
+  assert.ok(!('publishedTime' in article.openGraph))
+  assert.ok(!('modifiedTime' in article.openGraph))
+})
+
 test('page() and article() require a title', () => {
   assert.throws(() => site.page({}), TypeError)
   assert.throws(() => site.page(), TypeError)
