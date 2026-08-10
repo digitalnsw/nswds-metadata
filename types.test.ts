@@ -33,6 +33,9 @@ export const article: Metadata = site.article({
   tags: ['guidance'],
 })
 
+// Evergreen documentation: og:type article with no publication date.
+export const undatedArticle: Metadata = site.article({ title: 'Getting started' })
+
 export const fullyConfigured = defineSite({
   title: 'Public Sans (NSW) Download',
   description: '…',

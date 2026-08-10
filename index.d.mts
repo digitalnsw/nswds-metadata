@@ -119,7 +119,13 @@ export interface PageOptions {
 }
 
 export interface ArticleOptions extends PageOptions {
-  published: string | Date
+  /**
+   * Optional. `og:type: article` is legitimate for evergreen documentation that
+   * has no publication date — the OpenGraph spec makes `article:published_time`
+   * optional, and a docs page that reports a date it does not have is worse
+   * than one that reports none.
+   */
+  published?: string | Date
   /** "Has this guidance changed since I read it?" — often the most important fact on the page. */
   modified?: string | Date
   expires?: string | Date
