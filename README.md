@@ -91,6 +91,24 @@ export const metadata = site.article({
 })
 ```
 
+### Titles below the root
+
+`site.page()` returns `{ default, template }` rather than a bare string, and that
+shape is load-bearing. `resolveTitle` returns `template: null` for a string, and
+Next stashes that null — so a plain-string title in an _intermediate_ layout
+wipes the template for **everything below it**, and a route two levels deep
+renders `Cards` instead of `Cards | Site`.
+
+Two escape hatches:
+
+```tsx
+// Opts out of the template for this segment; routes below it are unaffected.
+site.page({ title: { absolute: 'Page not found' } })
+
+// A sub-brand section: its own template, for this segment and everything below.
+site.page({ title: 'Signature builder', titleTemplate: '%s | NSW Signatures' })
+```
+
 ### Escape hatch
 
 `site.metadata` is a plain object, so anything the options do not cover is a

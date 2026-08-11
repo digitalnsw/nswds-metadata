@@ -279,14 +279,42 @@ test('page() emits no openGraph key at all', () => {
   // inherited from the page's own title/description for free.
   const page = site.page({ title: 'Guidance' })
   assert.ok(!('openGraph' in page))
-  assert.equal(page.title, 'Guidance')
+  assert.equal(page.title.default, 'Guidance')
   assert.equal(page.alternates.canonical, './')
 })
 
-test('page() supports an absolute title that opts out of the template', () => {
-  assert.deepEqual(site.page({ title: { absolute: 'Page not found' } }).title, {
-    absolute: 'Page not found',
+test('page() carries a title template so nested routes keep the suffix', () => {
+  // The defect this replaced: resolveTitle returns `template: null` for a bare
+  // string, and resolve-metadata stashes that null — so a plain-string title in
+  // an INTERMEDIATE layout wiped the template for everything below it. A route
+  // two levels deep rendered "Cards" while its parent rendered "Blocks | Site".
+  //
+  // `{ default, template }` is the shape that works: resolveTitle applies the
+  // stashed parent template to `default`, so the segment keeps its own suffix,
+  // while the template it carries keeps descendants working.
+  const page = site.page({ title: 'Guidance' })
+  assert.deepEqual(page.title, {
+    default: 'Guidance',
+    template: site.metadata.title.template,
   })
+  assert.notEqual(typeof page.title, 'string')
+})
+
+test('page() supports an absolute title that opts out of the template', () => {
+  // `absolute` wins outright and is never templated — but it still carries
+  // `template`, so routes BELOW an absolute-titled segment are unaffected.
+  const page = site.page({ title: { absolute: 'Page not found' } })
+  assert.equal(page.title.absolute, 'Page not found')
+  assert.equal(page.title.template, site.metadata.title.template)
+  assert.ok(!('default' in page.title))
+})
+
+test('page() accepts its own template, for a sub-brand section', () => {
+  const page = site.page({ title: 'Signature builder', titleTemplate: '%s | NSW Signatures' })
+  assert.equal(page.title.template, '%s | NSW Signatures')
+  assert.equal(page.title.default, 'Signature builder')
+  assert.throws(() => site.page({ title: 'x', titleTemplate: 'no placeholder' }), TypeError)
+  assert.throws(() => site.page({ title: 'x', titleTemplate: '%s | %s' }), TypeError)
 })
 
 test('page() restates the whole openGraph block when it overrides the image', () => {

@@ -169,7 +169,8 @@ expect(!('icons' in manifest), 'the manifest should carry no icons by default')
 // build error and no runtime error.
 const html = findRenderedHtml(join(fixture, '.next'), 'index.html')
 const nested = findRenderedHtml(join(fixture, '.next'), 'guidance.html')
-if (!html || !nested) {
+const deep = findRenderedHtml(join(fixture, '.next'), 'detail.html')
+if (!html || !nested || !deep) {
   console.error(
     '❌ next build produced no rendered HTML to assert against' +
       `${html ? ' for the nested /guidance route' : ''}.`,
@@ -211,6 +212,23 @@ expect(
 expect(
   attr(nested, /<meta property="og:site_name" content="([^"]*)"/) === 'Fixture',
   'the nested route lost og:site_name — a page-level openGraph key replaced the layout block',
+)
+
+// --- The title template must survive an intermediate layout ----------------
+// Only observable two levels deep. resolveTitle returns `template: null` for a
+// bare-string title, and resolve-metadata stashes that null — so a plain string
+// in /guidance/layout.tsx would wipe the suffix for everything below it, and
+// /guidance/detail would render "Detail" instead of "Detail | Fixture".
+const deepTitle = attr(deep, /<title[^>]*>([^<]*)<\/title>/)
+expect(
+  deepTitle === 'Detail | Fixture',
+  `/guidance/detail <title> was ${JSON.stringify(deepTitle)}, expected "Detail | Fixture" — ` +
+    'the title template did not survive the intermediate layout',
+)
+const nestedTitle = attr(nested, /<title[^>]*>([^<]*)<\/title>/)
+expect(
+  nestedTitle === 'Guidance | Fixture',
+  `/guidance <title> was ${JSON.stringify(nestedTitle)}, expected "Guidance | Fixture"`,
 )
 
 // --- Removals and additions ------------------------------------------------
@@ -257,3 +275,6 @@ console.log(
   `✅ canonical resolves per route: / → ${rootCanonical}, /guidance → ${nestedCanonical}.`,
 )
 console.log('✅ site.page() inherits og:site_name while getting its own og:title.')
+console.log(
+  `✅ the title template survives an intermediate layout: /guidance → "${nestedTitle}", /guidance/detail → "${deepTitle}".`,
+)
