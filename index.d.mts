@@ -99,8 +99,14 @@ export interface ManifestOptions {
 // ---------------------------------------------------------------------------
 
 export interface PageOptions {
-  /** A plain string uses the site's title template; `{ absolute }` opts out of it. */
+  /** A plain string uses the title template; `{ absolute }` opts out of it. */
   title: string | { absolute: string }
+  /**
+   * Override the title template for this segment and everything below it — for
+   * a sub-brand section with its own name. Must contain exactly one `%s`.
+   * Defaults to the site's.
+   */
+  titleTemplate?: string
   description?: string
   /** Defaults to `'./'` — the current route. */
   canonical?: string

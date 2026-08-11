@@ -130,6 +130,23 @@ function normaliseImage(image) {
   return typeof image === 'string' ? { url: image } : { ...image }
 }
 
+/**
+ * `%s` is a GLOBAL replace — `template.replace(/%s/g, title)` in
+ * resolve-title.js. Two placeholders render the title twice
+ * ("Contact | Contact | Site"); they do not drop the second. Zero placeholders
+ * makes every descendant render the same title.
+ */
+function requireOnePlaceholder(template, name, fn) {
+  requireString(template, name, fn)
+  const placeholders = template.split('%s').length - 1
+  if (placeholders !== 1) {
+    throw new TypeError(
+      `${fn}: \`${name}\` must contain exactly one "%s" (got ${placeholders} in ${JSON.stringify(template)}).`,
+    )
+  }
+  return template
+}
+
 function toIsoString(value, name) {
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) {
@@ -233,16 +250,7 @@ function buildMetadata(site) {
     throw new TypeError(`defineSite: \`url\` must be an absolute URL (got ${JSON.stringify(url)}).`)
   }
 
-  // `%s` is a GLOBAL replace — `template.replace(/%s/g, title)` in
-  // resolve-title.js. Two placeholders render the title twice
-  // ("Contact | Contact | Site"); they do not drop the second. Zero
-  // placeholders makes every child page render the same title.
-  const placeholders = titleTemplate.split('%s').length - 1
-  if (placeholders !== 1) {
-    throw new TypeError(
-      `defineSite: \`titleTemplate\` must contain exactly one "%s" (got ${placeholders} in ${JSON.stringify(titleTemplate)}).`,
-    )
-  }
+  requireOnePlaceholder(titleTemplate, 'titleTemplate', 'defineSite')
 
   return compact({
     metadataBase,
@@ -300,10 +308,35 @@ function buildPageMetadata(site, options) {
     throw new TypeError('site.page: an options object is required.')
   }
 
+  // Always an object carrying a `template`, never a bare string.
+  //
+  // `resolveTitle` returns `template: null` for a string, and resolve-metadata
+  // stashes that null — so a plain-string title in an INTERMEDIATE layout wipes
+  // the template for everything below it. That is why a route two levels deep
+  // rendered "Cards" while its parent rendered "Blocks | Site".
+  //
+  // `{ default, template }` is the shape that works: resolveTitle applies the
+  // stashed parent template to `default` (`resolveTitleTemplate(stashedTemplate,
+  // title.default)`), so the segment itself still gets the suffix, while the
+  // `template` it carries keeps descendants working.
+  //
+  // `absolute` wins outright and is never templated — that is the opt-out — but
+  // it still carries `template` so children below it are unaffected.
+  const titleTemplate = requireOnePlaceholder(
+    options.titleTemplate ?? site.titleTemplate,
+    'titleTemplate',
+    'site.page',
+  )
   const title =
     typeof options.title === 'object' && options.title !== null
-      ? { absolute: requireString(options.title.absolute, 'title.absolute', 'site.page') }
-      : requireString(options.title, 'title', 'site.page')
+      ? {
+          absolute: requireString(options.title.absolute, 'title.absolute', 'site.page'),
+          template: titleTemplate,
+        }
+      : {
+          default: requireString(options.title, 'title', 'site.page'),
+          template: titleTemplate,
+        }
 
   return compact({
     title,
