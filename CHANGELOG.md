@@ -1,3 +1,9 @@
+## [1.1.2](https://github.com/digitalnsw/nswds-metadata/compare/v1.1.1...v1.1.2) (2026-08-11)
+
+### Bug Fixes
+
+* preserve the title template below an intermediate layout ([#4](https://github.com/digitalnsw/nswds-metadata/issues/4)) ([0d9bac8](https://github.com/digitalnsw/nswds-metadata/commit/0d9bac85137980a3d25bbf95af2fd6d71ca3764b))
+
 ## [1.1.1](https://github.com/digitalnsw/nswds-metadata/compare/v1.1.0...v1.1.1) (2026-08-10)
 
 ### Bug Fixes
