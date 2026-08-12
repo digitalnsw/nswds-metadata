@@ -12,6 +12,10 @@ in one versioned place; the fields that genuinely differ stay arguments.
 Everything here is checked against Next 16.3.0's `dist/`, not its prose docs,
 which are wrong in several places that matter — noted inline where relevant.
 
+A consuming repo holds exactly one module that calls `defineSite` — by
+convention `lib/site.ts` — and its root layout re-exports what that returns. See
+[Use](#use) for the full shape.
+
 ## Install
 
 ```sh
