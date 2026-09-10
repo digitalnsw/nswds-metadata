@@ -54,7 +54,9 @@ test('prose about breaking things is not a breaking change', async () => {
 
 test('the footers still declare a breaking change', async () => {
   for (const keyword of ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING']) {
-    const message = ['feat(api): move the endpoint', '', keyword + ': the old path is gone.'].join('\n')
+    const message = ['feat(api): move the endpoint', '', keyword + ': the old path is gone.'].join(
+      '\n',
+    )
 
     assert.equal(await releaseTypeFor(message), 'major', keyword + ' must release a major')
   }
