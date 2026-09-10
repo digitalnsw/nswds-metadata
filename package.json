@@ -41,7 +41,7 @@
   },
   "scripts": {
     "semantic-release": "semantic-release",
-    "test": "node --test index.test.mjs manifest.test.mjs",
+    "test": "node --test index.test.mjs manifest.test.mjs release-config.test.mjs",
     "test:build": "node scripts/test-next-build.mjs",
     "typecheck": "tsc --noEmit",
     "check:package": "publint --strict && attw --pack . --profile esm-only",
