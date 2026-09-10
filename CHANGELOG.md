@@ -1,3 +1,9 @@
+## [1.1.3](https://github.com/digitalnsw/nswds-metadata/compare/v1.1.2...v1.1.3) (2026-09-10)
+
+### Bug Fixes
+
+* **release:** require a colon before a breaking-change footer ([#28](https://github.com/digitalnsw/nswds-metadata/issues/28)) ([5907c07](https://github.com/digitalnsw/nswds-metadata/commit/5907c07c8c289766969bf78edc9b04fea21a3641)), closes [digitalnsw/nswds-devops#129](https://github.com/digitalnsw/nswds-devops/issues/129)
+
 ## [1.1.2](https://github.com/digitalnsw/nswds-metadata/compare/v1.1.1...v1.1.2) (2026-08-11)
 
 ### Bug Fixes
