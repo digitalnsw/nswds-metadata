@@ -1,9 +1,13 @@
-// breakingHeaderPattern is load-bearing: semantic-release's bundled
-// conventional-commits parser does not honour the `type!:` bang on its own,
-// so without this pattern a `feat!:` commit is released as a MINOR bump
-// instead of a MAJOR one (this shipped a breaking change as a minor release
-// in @nswds/tokens v2.33.0 — see nswds-tokens#79). Do not remove it when
-// upgrading semantic-release without re-verifying bang-commit handling.
+// breakingHeaderPattern is a DEFENSIVE FALLBACK for the `type!:` bang. It was
+// load-bearing when it was added: the bundled parser did not honour the bang on
+// its own, and a `feat!:` shipped as a MINOR — that is how a breaking change
+// went out as @nswds/tokens v2.33.0 (nswds-tokens#79).
+//
+// On the current dependency set it no longer is. Deleting it leaves `feat!:`
+// still majoring on semantic-release 25.0.9, because the conventionalcommits
+// preset now handles the bang itself. Keep it for the version that stops doing
+// so — but the thing to re-verify when upgrading semantic-release is that
+// `feat!:` still majors, not that this line is what makes it.
 const parserOpts = {
   noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING'],
   // notesPattern requires the COLON that the Conventional Commits footer
