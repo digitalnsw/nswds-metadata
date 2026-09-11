@@ -137,18 +137,23 @@ segment merging — see above.
 
 | File                 | Spec                                                                                    |
 | -------------------- | --------------------------------------------------------------------------------------- |
-| `app/favicon.ico`    | single 32×32 frame, 1–5 KB                                                              |
+| `app/favicon.ico`    | 8 frames, 16×16 → 256×256, ~400 KB                                                      |
 | `app/icon.svg`       | square viewBox, dark mode via inline `@media (prefers-color-scheme: dark)`, no `<text>` |
-| `app/apple-icon.png` | **180×180, fully opaque**, no pre-rounded corners                                       |
+| `app/apple-icon.png` | **1024×1024, fully opaque**, no pre-rounded corners                                     |
 
-That set emits exactly this, content-hashed, with `sizes` and `type` derived
-from the files themselves:
+That set emits exactly this, content-hashed. The `type` comes from each file;
+the `sizes` do not — Next stamps its own (see the note below):
 
 ```html
 <link rel="icon" href="/favicon.ico?<hash>" sizes="32x32" type="image/x-icon" />
 <link rel="icon" href="/icon.svg?<hash>" sizes="any" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="/apple-icon.png?<hash>" sizes="180x180" type="image/png" />
+<link rel="apple-touch-icon" href="/apple-icon.png?<hash>" sizes="1x1" type="image/png" />
 ```
+
+Those raster `sizes` are Next 16.3.0's own labels, not the files' real pixels:
+it stamps `favicon.ico` as `32x32` — ignoring the eight frames ours actually
+holds, 16×16 → 256×256 — and the 1024×1024 `apple-icon.png` as `1x1`. Only
+`icon.svg`'s `any` is inherent to the format.
 
 **`defineSite` emits no `icons` key, and you should almost never set one.**
 Setting `metadata.icons` does not add to the file conventions — it suppresses
