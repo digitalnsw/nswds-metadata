@@ -1,3 +1,9 @@
+## [1.1.4](https://github.com/digitalnsw/nswds-metadata/compare/v1.1.3...v1.1.4) (2026-09-11)
+
+### Bug Fixes
+
+* **release:** honour the spec's hyphenated breaking-change footer ([#29](https://github.com/digitalnsw/nswds-metadata/issues/29)) ([fc52085](https://github.com/digitalnsw/nswds-metadata/commit/fc520850b8fa330ea45628d1df7f2e99948da686))
+
 ## [1.1.3](https://github.com/digitalnsw/nswds-metadata/compare/v1.1.2...v1.1.3) (2026-09-10)
 
 ### Bug Fixes
