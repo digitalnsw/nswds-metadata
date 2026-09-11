@@ -52,8 +52,20 @@ test('prose about breaking things is not a breaking change', async () => {
   }
 })
 
+test('the hyphenated synonym is prose unless it is a footer', async () => {
+  // A keyword now, so the phrase in ordinary prose must stay prose.
+  const message = [
+    'fix(a): tidy the guard',
+    '',
+    'Some context first.',
+    'breaking-change handling is unchanged here.',
+  ].join('\n')
+
+  assert.notEqual(await releaseTypeFor(message), 'major')
+})
+
 test('the footers still declare a breaking change', async () => {
-  for (const keyword of ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING']) {
+  for (const keyword of ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING-CHANGE', 'BREAKING']) {
     const message = ['feat(api): move the endpoint', '', keyword + ': the old path is gone.'].join(
       '\n',
     )
