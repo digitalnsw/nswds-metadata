@@ -61,8 +61,9 @@ export const metadata = site.page({ title: 'Guidance' })
 
 Three options are required — `title`, `description`, `url`. Everything else has
 a fleet default: `metadataBase`, the title template, OpenGraph with `en_AU` and
-the NSW image, a `summary_large_image` Twitter card, `robots` with
-`max-image-preview:large`, a self-resolving canonical, and `appleWebApp`.
+the NSW image (replace it with [your own card](#social-cards-opt-in-with-a-file)),
+a `summary_large_image` Twitter card, `robots` with `max-image-preview:large`, a
+self-resolving canonical, and `appleWebApp`.
 
 Do **not** annotate the exports as `: Metadata`. Next's type plugin does not
 check `export const metadata`, so the annotation adds nothing and reintroduces
@@ -223,6 +224,92 @@ does a bare `if (manifest) { target.manifest = manifest }`, so `app/manifest.ts`
 overwrites any `metadata.manifest` value. That is why this package sets none —
 a default would be dead code where the route exists and a link to a 404 where it
 does not.
+
+## Social cards: opt in with a file
+
+The default `og:image` is the fleet's generic `og.png`. A site that wants its own
+card generates it with `app/opengraph-image.tsx`, and tells `defineSite` to step
+aside:
+
+```ts
+export const site = defineSite({
+  title: '…',
+  description: '…',
+  url: '…',
+  image: false,
+})
+```
+
+**Without `image: false` the file does nothing.** Next only uses a file-convention
+image when the segment's `openGraph` has no `images` key at all:
+
+```js
+if (openGraph && !source?.openGraph?.hasOwnProperty('images')) { …use the file… }
+// next/dist/lib/metadata/resolve-metadata.js:149
+```
+
+It is a presence check, so `images: undefined` blocks the file too; `image: false`
+omits the key. This is the `icons` trap again, and harder to spot: the generic
+card keeps rendering, so nothing looks broken.
+
+**Do not add `app/twitter-image.*`.** With no `twitter.images` of its own, Next
+copies the OpenGraph image into the Twitter tags, alt text and dimensions
+included (`:636`).
+
+**Fonts must be TTF, OTF or WOFF.** `ImageResponse` cannot read WOFF2, which is
+what `next/font` serves and what most self-hosted copies of Public Sans are.
+Commit a TTF and read it from disk. The route is prerendered, so the read
+happens once, at build:
+
+```tsx
+// app/opengraph-image.tsx
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { ImageResponse } from 'next/og'
+
+export const alt = 'Public Sans (NSW) Download'
+export const size = { width: 1200, height: 630 }
+export const contentType = 'image/png'
+
+export default async function Image() {
+  const light = await readFile(join(process.cwd(), 'assets/fonts/PublicSans-Light.ttf'))
+
+  return new ImageResponse(
+    <div style={{ display: 'flex', width: '100%', height: '100%', padding: 72, fontSize: 96 }}>
+      Public Sans
+    </div>,
+    { ...size, fonts: [{ name: 'Public Sans', data: light, weight: 300, style: 'normal' }] },
+  )
+}
+```
+
+### Behind sign-in
+
+A site whose `proxy.ts` redirects signed-out visitors redirects the crawler
+fetching the card as well: it gets the sign-in page's HTML and shows no image.
+`/opengraph-image` has no file extension, so the usual static-asset exclusions
+do not catch it. Name it in the matcher, here added to the fleet's usual one:
+
+```ts
+// proxy.ts
+export const config = {
+  matcher: [
+    '/((?!(?:api|_next/static|_next/image)(?:/|$)|(?:favicon[.]ico|icon[.]svg|apple-icon[.]png|opengraph-image)$).*)',
+  ],
+}
+```
+
+The `$` keeps a lookalike such as `/opengraph-image-x` behind the gate. A card in
+a nested segment (`app/guidance/opengraph-image.tsx`) is served at
+`/guidance/opengraph-image` and needs its own entry.
+
+This cannot be a shared export. Next reads `matcher` by static analysis at build
+time and ignores anything that is not a literal (the `proxy.js` file-convention
+reference says so). The crawler also still follows the _page's_ redirect, so on a
+gated site the card's title and description are the sign-in page's; only the
+image is yours.
+
+Check what a crawler receives with the bot-UA `curl` under [Tests](#tests).
 
 ## What this deliberately does not emit
 
